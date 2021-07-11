@@ -25,6 +25,7 @@ repositories {
 	mavenCentral()
 	maven { url 'https://repo.spring.io/snapshot' }
 	maven { url 'https://repo.spring.io/milestone' }
+	maven { url 'https://jitpack.io' }
 }
 
 test {
@@ -32,7 +33,7 @@ test {
 
 	testLogging {
 		events "passed", "skipped", "failed"
-
+		//showStandardStreams = true
 		afterSuite { desc, result ->
 			if (!desc.parent) {
 				println "Tests run: ${result.testCount}, " +
@@ -51,10 +52,13 @@ dependencies {
 	implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml'
 	implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-csv'
 	implementation 'org.postgresql:postgresql'
-
+	implementation 'org.json:json:20210307'
+	implementation 'com.github.everit-org.json-schema:org.everit.json.schema:1.12.3'
+	implementation 'com.google.code.gson:gson:2.8.7'
 	implementation 'com.vladmihalcea:hibernate-types-52:2.10.2'
 
 	testImplementation('org.springframework.boot:spring-boot-starter-test') {
 		exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
 	}
+
 }

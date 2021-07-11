@@ -1,4 +1,4 @@
-package org.jvalue.ods.adapterservice.datasource.model;
+ package org.jvalue.ods.adapterservice.datasource.model;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonFormat;

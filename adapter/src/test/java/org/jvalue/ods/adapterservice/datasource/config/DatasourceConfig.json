@@ -23,6 +23,10 @@
     "description": "Describing..."
   },
   "schema": {
-    "test": 1
+    "properties": {
+      "hallo": {
+        "type": "string"
+      }
+    }
   }
 }

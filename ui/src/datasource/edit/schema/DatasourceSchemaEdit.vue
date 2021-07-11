@@ -51,7 +51,9 @@ export default class DatasourceSchemaEdit extends Vue {
   private schemaAsText = ''
 
   mounted (): void{
-    this.schemaAsText = JSON.stringify(this.dataSource.schema)
+    if (this.dataSource.schema !== undefined) {
+      this.schemaAsText = JSON.stringify(this.dataSource.schema)
+    }
   }
 
   @PropSync('value')

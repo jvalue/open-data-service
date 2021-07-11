@@ -69,7 +69,7 @@ services:
       - OUTBOXER_DATABASE_SERVER_NAME=adapter-outboxer
       - OUTBOXER_PUBLISHER_AMQP_URL=amqp://rabbit_adm:R4bb!7_4DM_p4SS@rabbitmq:5672
       - OUTBOXER_PUBLISHER_AMQP_EXCHANGE=ods_global
-      - OUTBOXER_PUBLISHER_AMQP_RETRIES=5
+      - OUTBOXER_PUBLISHER_AMQP_RETRIES=50
       - OUTBOXER_PUBLISHER_AMQP_RETRY_DELAY_MS=1000
       # In production this file should be storage outside of the container, so it does survive outboxer restarts.
       #- OUTBOXER_OFFSET_STORAGE_FILE_FILENAME=/data/offset.dat
@@ -171,10 +171,10 @@ services:
   #   - "./pgdata:/var/lib/postgresql/data"
 
   # Uncomment this if you want to manage the Postgres databases with adminer
-  # adminer: # management UI for Postgres
-  #   image: adminer
-  #   ports:
-  #     - 8080:8080
+  adminer: # management UI for Postgres
+    image: adminer
+    ports:
+      - 8081:8080
 
   storage-db-liquibase: # perform database migration on start up
     image: ${DOCKER_REGISTRY}/storage-db-liquibase

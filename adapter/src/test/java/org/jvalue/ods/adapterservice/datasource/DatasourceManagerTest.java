@@ -42,7 +42,7 @@ public class DatasourceManagerTest {
 
   private final ObjectMapper mapper = new ObjectMapper();
   private final File configFile = new File(
-      "src/test/java/org/jvalue/ods/adapterservice/datasource/model/DatasourceConfig.json");
+      "src/test/java/org/jvalue/ods/adapterservice/datasource/config/DatasourceConfig.json");
 
   @Mock
   DatasourceRepository datasourceRepository;

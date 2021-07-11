@@ -13,6 +13,9 @@ import org.jvalue.ods.adapterservice.datasource.repository.DataImportRepository;
 import org.jvalue.ods.adapterservice.datasource.repository.DatasourceRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.everit.json.schema.ValidationException;
+
+import org.jvalue.ods.adapterservice.datasource.validator.*;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -98,17 +101,31 @@ public class DatasourceManager {
    */
   @Transactional
   DataImport.MetaData executeImport(Long id, RuntimeParameters runtimeParameters)
-      throws DatasourceNotFoundException, ImporterParameterException, InterpreterParameterException, IOException {
+      throws DatasourceNotFoundException, ImporterParameterException, InterpreterParameterException, IOException {    
     Datasource datasource = getDatasource(id);
-    AdapterConfig adapterConfig = datasource.toAdapterConfig(runtimeParameters);
-    DataImportResponse executionResult = adapter.executeJob(adapterConfig);
-    DataImport dataImport = new DataImport(datasource, executionResult.getData());
+    DataImport dataImport = new DataImport(datasource, "", ValidationMetaData.HealthStatus.FAILED);
+    Validator validator = new JsonSchemaValidator();
+    try {
+      AdapterConfig adapterConfig = datasource.toAdapterConfig(runtimeParameters);
+      DataImportResponse executionResult = adapter.executeJob(adapterConfig);
+      String responseData = executionResult.getData();
+      dataImport = new DataImport(datasource, responseData);
+      dataImport.setValidationMetaData(validator.validate(dataImport));
 
-    DataImport savedDataImport = dataImportRepository.save(dataImport);
+      DataImport savedDataImport = dataImportRepository.save(dataImport);
+      amqpPublisher.publishImportSuccess(id, savedDataImport.getData());
 
-    amqpPublisher.publishImportSuccess(id, savedDataImport.getData());
+      return savedDataImport.getMetaData();
+    } catch (ImporterParameterException | InterpreterParameterException | IOException e) {
+      handleImportFailed(datasource, dataImport, e);
+      throw e;
+    }   
+  }
 
-    return savedDataImport.getMetaData();
+  @Transactional
+  void handleImportFailed(Datasource datasource, DataImport dataImport, Exception e){
+      DataImport savedDataImport = dataImportRepository.save(dataImport);
+      publishImportFailure(datasource.getId(), e);   
   }
 
   private void publishImportFailure(Long id, Exception e) {

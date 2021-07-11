@@ -8,9 +8,15 @@ export default interface Datasource {
     type: string
     parameters: object
   }
-  schema: object
+  schema?: object
   metadata: DatasourceMetaData
   trigger: Trigger
+}
+
+export interface DataimportMetaData {
+  id: number
+  health: HealthStatus
+  timestamp: string
 }
 
 export interface DatasourceMetaData {
@@ -32,3 +38,9 @@ export interface DataLocation {
 }
 
 export type Data = object
+
+export enum HealthStatus {
+  OK = 'OK',
+  WARINING = 'WARNING',
+  FAILED = 'FAILED'
+}

@@ -1,5 +1,5 @@
 import axios, { AxiosResponse } from 'axios'
-import Datasource, { Data, DataLocation } from './datasource'
+import Datasource, { Data, DataLocation, DataimportMetaData } from './datasource'
 import { ADAPTER_SERVICE_URL } from '@/env'
 
 /**
@@ -55,4 +55,10 @@ export async function getDatasourceData (id: number): Promise<Data> {
   const location = jsonResponse.location
   const dataResponse = await http.get<string>(location)
   return JSON.parse(dataResponse.data)
+}
+
+export async function getLatestDataimport (id: number): Promise<DataimportMetaData> {
+  const importResponse = await http.get<string>(`/datasources/${id}/imports/latest`)
+  const jsonResponse: DataimportMetaData = JSON.parse(importResponse.data)
+  return jsonResponse
 }

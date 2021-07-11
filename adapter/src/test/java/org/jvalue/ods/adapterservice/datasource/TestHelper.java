@@ -21,7 +21,7 @@ public class TestHelper {
       true,
       new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX").parse("1905-12-01T02:30:00.123Z"),
       50000L);
-    Object schema = parseJsonToObject("{\"test\":1}");
+    Object schema = parseJsonToObject("{\"properties\":{\"hallo\":{\"type\":\"string\"}}}");
     return new Datasource(protocolConfig, formatConfig, metadata, trigger, schema);
   }
 
@@ -43,7 +43,7 @@ public class TestHelper {
       true,
       new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX").parse("1905-12-01T02:30:00.123Z"),
       50000L);
-    Object schema = parseJsonToObject("{\"test\":1}");
+    Object schema = parseJsonToObject("{\"properties\":{\"hallo\":{\"type\":\"string\"}}}");
 
     return new Datasource(protocolConfig, formatConfig, metadata, trigger, schema);
   }
