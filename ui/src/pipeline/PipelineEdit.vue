@@ -58,25 +58,48 @@
             <pipeline-transformation-config
               v-model="dialogPipeline.transformation"
               :datasource-id="dialogPipeline.datasourceId"
-              @validityChanged="validStep2 = $event"
+              @validityChanged="validStep2 = isSchemaAlive? $event : $event+1"
             />
             <stepper-button-group
               :step="2"
               :next-enabled="validStep2"
+              @stepChanged="dialogStep = isSchemaAlive? $event : $event+1"
+            />
+          </v-stepper-content>
+
+          <v-stepper-step
+            v-if="isSchemaAlive"
+            :complete="dialogStep > 3"
+            step="3"
+          >
+            Generated schema
+            <small>Customize the generated schema </small>
+          </v-stepper-step>
+          <v-stepper-content 
+            v-if="isSchemaAlive"
+            step="3"
+          >
+            <pipeline-schema-edit
+              v-model="dialogPipeline"
+              @validityChanged="validStep3 = $event"
+            />
+            <stepper-button-group
+              :step="3"
+              :next-enabled="validStep3"
               @stepChanged="dialogStep = $event"
             />
           </v-stepper-content>
 
           <v-stepper-step
-            :complete="dialogStep > 3"
-            step="3"
+            :complete="dialogStep > 4"
+            step="4"
           >
             Meta-Data
           </v-stepper-step>
-          <v-stepper-content step="3">
+          <v-stepper-content step="4">
             <pipeline-metadata-config
               v-model="dialogPipeline.metadata"
-              @validityChanged="validStep3 = $event"
+              @validityChanged="validStep4 = $event"
             />
           </v-stepper-content>
         </v-stepper>
@@ -119,16 +142,18 @@ import Component from 'vue-class-component'
 import { Watch } from 'vue-property-decorator'
 import { Action, State } from 'vuex-class'
 
+import * as SchemaSuggestionREST from './../datasource/schemaSuggestionRest'
 import Pipeline from '@/pipeline/pipeline'
 import StepperButtonGroup from '@/components/StepperButtonGroup.vue'
 import PipelineMetadataConfig from '@/pipeline/edit/PipelineMetadataConfig.vue'
 import PipelineTransformationConfig from '@/pipeline/edit/transformation/PipelineTransformationConfig.vue'
+import PipelineSchemaEdit from './edit/schema/PipelineSchemaEdit.vue'
 import { requiredRule } from '@/validators'
 
 const pipelineNamespace = { namespace: 'pipeline' }
 
 @Component({
-  components: { StepperButtonGroup, PipelineMetadataConfig, PipelineTransformationConfig }
+  components: { StepperButtonGroup, PipelineMetadataConfig, PipelineTransformationConfig, PipelineSchemaEdit }
 })
 export default class PipelineEdit extends Vue {
   @Action('loadPipelineById', pipelineNamespace) private loadPipelineByIdAction!: (id: number) => void
@@ -138,12 +163,14 @@ export default class PipelineEdit extends Vue {
 
   private isEditMode = false
   private isDatasourcePreselected = false
+  private isSchemaAlive: boolean = false
 
   private dialogStep = 1
 
   private validStep1 = false
   private validStep2 = false // need to execute
   private validStep3 = true // starts with valid default values
+  private validStep4 = true // starts with valid default values
 
   private dialogPipeline: Pipeline = {
     id: -1,
@@ -154,7 +181,8 @@ export default class PipelineEdit extends Vue {
       license: '',
       description: '',
       displayName: ''
-    }
+    },
+    schema: {}
   }
 
   private required = requiredRule
@@ -172,6 +200,14 @@ export default class PipelineEdit extends Vue {
         this.dialogPipeline.datasourceId = parseInt(datasourceId)
       }
     }
+  }
+
+  mounted (): void{
+    void this.updateIsSchemaAlive()
+  }
+
+  private async updateIsSchemaAlive (): Promise<void> {
+    this.isSchemaAlive = (await SchemaSuggestionREST.getIsAlive() === 'alive')    
   }
 
   @Watch('selectedPipeline')
@@ -203,7 +239,8 @@ export default class PipelineEdit extends Vue {
   private evaluateAllForms (): boolean {
     return this.validStep1 &&
         this.validStep2 &&
-        this.validStep3
+        this.validStep3 &&
+        this.validStep4
   }
 }
 </script>

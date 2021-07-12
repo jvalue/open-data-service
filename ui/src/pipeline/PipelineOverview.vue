@@ -17,7 +17,7 @@
         </v-btn>
         <v-btn
           class="ma-2"
-          @click="loadPipelinesAction()"
+          @click="loadPipelineStatesAction()"
         >
           <v-icon dark>
             mdi mdi-sync
@@ -38,7 +38,7 @@
         :items="pipelines"
         :search="search"
         :custom-filter="filterOnlyDisplayName"
-        :loading="isLoadingPipelines"
+        :loading="isLoadingPipelines && isLoadingPipelineStates"
         class="elevation-1"
       >
         <v-progress-linear
@@ -116,6 +116,15 @@
             </v-icon>
           </v-btn>
         </template>
+
+        <template #[`item.health`]="{ item }">
+          <v-icon
+            small
+            :color="pipelineStates.get(item.id)"
+          >
+            mdi-water
+          </v-icon>
+        </template>
       </v-data-table>
     </v-card>
   </div>
@@ -131,24 +140,30 @@ const namespace = { namespace: 'pipeline' }
 
 @Component({})
 export default class PipelineOverview extends Vue {
-  @Action('loadPipelines', namespace) private loadPipelinesAction!: () => void
+  @Action('loadPipelines', namespace) private loadPipelinesAction!: () => Promise<void>
+  @Action('loadPipelineStates', namespace) private loadPipelineStatesAction!: () => Promise<void>
   @Action('deletePipeline', namespace) private deletePipelineAction!: (id: number) => void
 
   @State('isLoadingPipelines', namespace) private isLoadingPipelines!: boolean
+  @State('isLoadingPipelineStates', namespace) private isLoadingPipelineStates!: boolean
   @State('pipelines', namespace) private pipelines!: Pipeline[]
+  @State('pipelineStates', namespace) private pipelineStates!: Map<number, string>
+
 
   private headers = [
     { text: 'Id', value: 'id' },
     { text: 'Datasource ID', value: 'datasourceId' },
     { text: 'Pipeline Name', value: 'metadata.displayName', sortable: false }, // sorting to be implemented
     { text: 'Author', value: 'metadata.author', sortable: false },
-    { text: 'Action', value: 'action', sortable: false }
+    { text: 'Action', value: 'action', sortable: false },
+    { text: 'Status', value: 'health', sortable: false }
   ]
 
   private search = ''
 
-  private mounted (): void {
-    this.loadPipelinesAction()
+  private async mounted (): Promise<void> {
+    await this.loadPipelinesAction()
+    await this.loadPipelineStatesAction()
   }
 
   private onShowPipelineData (pipeline: Pipeline): void {

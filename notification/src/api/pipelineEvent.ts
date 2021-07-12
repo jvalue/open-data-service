@@ -4,6 +4,7 @@ export interface PipelineSuccessEvent {
   pipelineId: number
   pipelineName: string
   data: object
+  schema: object
 }
 
 /**

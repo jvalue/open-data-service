@@ -171,10 +171,10 @@ services:
   #   - "./pgdata:/var/lib/postgresql/data"
 
   # Uncomment this if you want to manage the Postgres databases with adminer
-  # adminer: # management UI for Postgres
-  #   image: adminer
-  #   ports:
-  #     - 8080:8080
+  adminer: # management UI for Postgres
+    image: adminer
+    ports:
+      - 8081:8080
 
   storage-db-liquibase: # perform database migration on start up
     image: ${DOCKER_REGISTRY}/storage-db-liquibase

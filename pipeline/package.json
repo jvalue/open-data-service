@@ -15,6 +15,7 @@
     "@jvalue/node-dry-amqp": "0.1.2",
     "@jvalue/node-dry-basics": "0.0.3",
     "@jvalue/node-dry-pg": "1.2.1",
+    "ajv": "^8.6.1",
     "axios": "^0.21.1",
     "body-parser": "^1.19.0",
     "cors": "^2.8.5",

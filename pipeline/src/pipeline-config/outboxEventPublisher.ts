@@ -41,11 +41,18 @@ export async function publishError
 }
 
 export async function publishSuccess
-(client: ClientBase, pipelineId: number, pipelineName: string, result: unknown): Promise<string> {
-  const content = {
+(client: ClientBase, pipelineId: number, pipelineName: string, result: unknown, schema?: object): Promise<string> {
+  let content: any = {
     pipelineId: pipelineId,
     pipelineName: pipelineName,
     data: result
   }
+  if (schema !== undefined || schema !== null) {
+    content = {
+      ...content,
+      schema: schema as object
+    }
+  }
+  console.log('**********PIPELOINEEXECUTIONSUCCESS************')
   return await insertEvent(client, AMQP_PIPELINE_EXECUTION_SUCCESS_TOPIC, content)
 }

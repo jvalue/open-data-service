@@ -12,8 +12,11 @@ import VM2SandboxExecutor from './pipeline-execution/sandbox/vm2SandboxExecutor'
 import PipelineExecutor from './pipeline-execution/pipelineExecutor'
 import { PipelineConfigEndpoint } from './api/rest/pipelineConfigEndpoint'
 import { PipelineConfigManager } from './pipeline-config/pipelineConfigManager'
+import { PipelineTransformedDataManager } from './pipeline-config/pipelineTransformedDataManager'
+import { PipelineTranformedDataEndpoint } from './api/rest/pipelineTransformedDataEndpoint'
 import { createDatasourceExecutionConsumer } from './api/amqp/datasourceExecutionConsumer'
 import { init as initDatabase } from './pipeline-config/pipelineDatabase'
+import JsonSchemaValidator from './pipeline-validator/jsonschemavalidator'
 
 const port = 8080
 let server: Server | undefined
@@ -34,9 +37,17 @@ async function main (): Promise<void> {
 
   const postgresClient = await initDatabase(CONNECTION_RETRIES, CONNECTION_BACKOFF)
 
+  const validator = new JsonSchemaValidator()
+
+  const pipelineTransformedDataManager = new PipelineTransformedDataManager(
+    postgresClient
+  )
+
   const pipelineConfigManager = new PipelineConfigManager(
     postgresClient,
-    pipelineExecutor
+    pipelineExecutor,
+    pipelineTransformedDataManager,
+    validator
   )
 
   const amqpConnection = new AmqpConnection(AMQP_URL, CONNECTION_RETRIES, CONNECTION_BACKOFF, onAmqpConnectionLoss)
@@ -44,6 +55,7 @@ async function main (): Promise<void> {
 
   const pipelineExecutionEndpoint = new PipelineExecutionEndpoint(pipelineExecutor)
   const pipelineConfigEndpoint = new PipelineConfigEndpoint(pipelineConfigManager)
+  const pipelineTransformedDataEndpoint = new PipelineTranformedDataEndpoint(pipelineTransformedDataManager)
 
   const app = express()
   app.use(cors())
@@ -52,6 +64,7 @@ async function main (): Promise<void> {
 
   pipelineExecutionEndpoint.registerRoutes(app)
   pipelineConfigEndpoint.registerRoutes(app)
+  pipelineTransformedDataEndpoint.registerRoutes(app)
 
   app.get('/', (req: express.Request, res: express.Response): void => {
     res.status(200)

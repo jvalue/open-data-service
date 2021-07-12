@@ -1,14 +1,18 @@
 import { PostgresClient } from '@jvalue/node-dry-pg'
+import Validator from 'src/pipeline-validator/validator'
 
 import PipelineExecutor from '../pipeline-execution/pipelineExecutor'
 import { PipelineConfig, PipelineConfigDTO } from './model/pipelineConfig'
 import * as EventPublisher from './outboxEventPublisher'
 import * as PipelineConfigRepository from './pipelineConfigRepository'
+import { PipelineTransformedDataManager } from './pipelineTransformedDataManager'
 
 export class PipelineConfigManager {
   constructor (
     private readonly pgClient: PostgresClient,
-    private readonly pipelineExecutor: PipelineExecutor
+    private readonly pipelineExecutor: PipelineExecutor,
+    private readonly pipelineTransformedDataManager: PipelineTransformedDataManager,
+    private readonly validator: Validator
   ) {}
 
   async create (config: PipelineConfigDTO): Promise<PipelineConfig> {
@@ -65,8 +69,18 @@ export class PipelineConfigManager {
         await this.pgClient.transaction(async client =>
           await EventPublisher.publishError(client, config.id, config.metadata.displayName, result.error.message))
       } else if ('data' in result) {
+        const transformedData = this.validator.validate(config, result.data)
+        await this.pipelineTransformedDataManager.insert(transformedData)
+
         await this.pgClient.transaction(async client =>
-          await EventPublisher.publishSuccess(client, config.id, config.metadata.displayName, result.data))
+          await EventPublisher.publishSuccess(
+            client,
+            config.id,
+            config.metadata.displayName,
+            result.data,
+            config.schema
+          )
+        )
       } else {
         console.error(`Pipeline ${config.id} executed with ambiguous result: no data and no error!`)
       }

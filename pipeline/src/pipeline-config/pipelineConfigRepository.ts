@@ -10,6 +10,7 @@ const CREATE_CONFIG_TABLE_STATEMENT = `
   "id" bigint NOT NULL GENERATED ALWAYS AS IDENTITY,
   "datasourceId" bigint NOT NULL,
   "func" varchar NOT NULL,
+  "schema" jsonb,
   "author" varchar,
   "displayName" varchar NOT NULL,
   "license" varchar,
@@ -19,12 +20,12 @@ const CREATE_CONFIG_TABLE_STATEMENT = `
 )`
 const INSERT_CONFIG_STATEMENT = `
   INSERT INTO "${POSTGRES_SCHEMA}"."${CONFIG_TABLE_NAME}"
-  ("datasourceId", "func", "author", "displayName", "license", "description", "createdAt")
-  VALUES ($1, $2, $3, $4, $5, $6, $7)
+  ("datasourceId", "func", "author", "displayName", "license", "description", "createdAt", "schema")
+  VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
   RETURNING *`
 const UPDATE_CONFIG_STATEMENT = `
   UPDATE "${POSTGRES_SCHEMA}"."${CONFIG_TABLE_NAME}"
-  SET "datasourceId"=$2, "func"=$3, "author"=$4, "displayName"=$5, "license"=$6, "description"=$7
+  SET "datasourceId"=$2, "func"=$3, "author"=$4, "displayName"=$5, "license"=$6, "description"=$7, "schema"=$8
   WHERE id=$1`
 const GET_CONFIG_STATEMENT = `
   SELECT * FROM "${POSTGRES_SCHEMA}"."${CONFIG_TABLE_NAME}" WHERE "id" = $1`
@@ -46,6 +47,7 @@ interface DatabasePipeline {
   license: string
   description: string
   createdAt: Date
+  schema: object
 }
 
 export async function createPipelineConfigTable (client: ClientBase): Promise<void> {
@@ -60,7 +62,8 @@ export async function create (client: ClientBase, config: PipelineConfigDTO): Pr
     config.metadata.displayName,
     config.metadata.license,
     config.metadata.description,
-    new Date()
+    new Date(),
+    config.schema
   ]
   const { rows } = await client.query(INSERT_CONFIG_STATEMENT, values)
   return toPipelineConfig(rows[0])
@@ -93,7 +96,8 @@ export async function update (client: ClientBase, id: number, config: PipelineCo
     config.metadata.author,
     config.metadata.displayName,
     config.metadata.license,
-    config.metadata.description
+    config.metadata.description,
+    config.schema
   ]
   const result = await client.query(UPDATE_CONFIG_STATEMENT, values)
   if (result.rowCount === 0) {
@@ -119,6 +123,7 @@ function toPipelineConfig (dbResult: DatabasePipeline): PipelineConfig {
   return {
     id: +dbResult.id,
     datasourceId: +dbResult.datasourceId,
+    schema: dbResult.schema,
     transformation: {
       func: dbResult.func
     },

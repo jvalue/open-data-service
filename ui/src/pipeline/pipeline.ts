@@ -3,6 +3,7 @@ export default interface Pipeline {
   datasourceId: number
   metadata: PipelineMetaData
   transformation: TransformationConfig
+  schema: object
 }
 
 export interface PipelineMetaData {
@@ -14,4 +15,16 @@ export interface PipelineMetaData {
 
 export interface TransformationConfig {
   func: string
+}
+
+export interface TransformedDataMetaData {
+  id: number
+  healthStatus: HealthStatus
+  timestamp: string
+}
+
+export enum HealthStatus {
+  OK = 'OK',
+  WARINING = 'WARNING',
+  FAILED = 'FAILED'
 }

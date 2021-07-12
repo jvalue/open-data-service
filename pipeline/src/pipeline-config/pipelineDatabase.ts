@@ -5,6 +5,7 @@ import { POSTGRES_DB, POSTGRES_HOST, POSTGRES_PORT, POSTGRES_PW, POSTGRES_USER }
 
 import { createPipelineConfigTable } from './pipelineConfigRepository'
 import { createPipelineEventTable } from './pipelineEventRepository'
+import { createPipelineTransormDataTable } from './pipelineTransformedDataRepository'
 
 const POOL_CONFIG: PoolConfig = {
   host: POSTGRES_HOST,
@@ -23,6 +24,7 @@ export async function init (retries: number, backoffMs: number): Promise<Postgre
   await postgresClient.transaction(async client => {
     await createPipelineConfigTable(client)
     await createPipelineEventTable(client)
+    await createPipelineTransormDataTable(client)
   })
   return postgresClient
 }
